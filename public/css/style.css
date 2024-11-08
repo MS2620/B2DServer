@@ -1,0 +1,21 @@
+body,
+div {
+  margin: 0;
+  padding: 0;
+  border: none;
+  color: #44f;
+}
+
+body {
+  background-color: #aaa;
+  width: 800px;
+  height: 600px;
+  border: 1px solid #000;
+}
+
+div {
+  background-color: #000;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
