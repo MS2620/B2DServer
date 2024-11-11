@@ -202,8 +202,12 @@ function handleComplete() {
 
 init();
 
-$(document).keyup(function (e) {
+$(document).keydown(function (e) {
   socket.emit("keypress", { key: e.key });
+});
+
+$(document).keyup(function (e) {
+  socket.emit("keyrelease", { key: e.key });
 });
 
 /****

@@ -227,7 +227,7 @@ let connections = [];
 let world;
 const SCALE = 30;
 const WIDTH = 800;
-const HEIGHT = 600;
+const HEIGHT = 800;
 let size = 50;
 let fps = 80;
 let interval;
@@ -342,14 +342,26 @@ function update() {
 }
 
 function init() {
-  let gravity = new b2Vec2(0, 9.81);
-  world = new b2World(gravity, true);
+  world = new b2World(new b2Vec2(0, 9.81), false);
 
   interval = setInterval(function () {
     update();
   }, 1000 / fps);
 
   update();
+}
+
+// Keyboard input
+function stopleftright() {
+  for (let b = world.GetBodyList(); b; b = b.GetNext()) {
+    for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
+      if (f.GetBody().GetUserData().id === "hero") {
+        f.GetBody().SetLinearVelocity(
+          new b2Vec2(0, f.GetBody().GetLinearVelocity().y)
+        );
+      }
+    }
+  }
 }
 
 app.use(express.static("public"));
@@ -376,6 +388,11 @@ http.listen(3000, function () {
       console.log(e, socket.id);
       keyhit = true;
       key = e.key;
+    });
+
+    socket.on("keyrelease", (e) => {
+      console.log(e, socket.id);
+      stopleftright();
     });
 
     socket.on("map", function (data) {
