@@ -196,8 +196,8 @@ function placePlayer(row, col) {
   // Create player with defined properties
   createb2dObj(
     "hero", // Object ID
-    col * CELL_WIDTH + CELL_WIDTH / 2, // Centered X position
-    row * CELL_HEIGHT + CELL_HEIGHT / 2, // Centered Y position
+    col * CELL_WIDTH + CELL_WIDTH, // Centered X position
+    row * CELL_HEIGHT + CELL_HEIGHT, // Centered Y position
     {
       width: playerWidth, // Width of the player
       height: playerHeight,
@@ -210,23 +210,18 @@ function placePlayer(row, col) {
 }
 
 let b2Vec2 = Box2D.Common.Math.b2Vec2; // Vector2 class for 2D coordinates
-let b2AABB = Box2D.Collision.b2AABB; // Axis-aligned bounding box class
 let b2BodyDef = Box2D.Dynamics.b2BodyDef; // Definition class for body
 let b2Body = Box2D.Dynamics.b2Body; // Body class representing physical objects
 let b2FixtureDef = Box2D.Dynamics.b2FixtureDef; // Definition class for fixtures
-let b2Fixture = Box2D.Dynamics.b2Fixture; // Fixture class for collision shapes
 let b2World = Box2D.Dynamics.b2World; // World class for managing the simulation
-let b2MassData = Box2D.Collision.Shapes.b2MassData; // Class for mass properties
 let b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape; // Class for polygon shapes
 let b2CircleShape = Box2D.Collision.Shapes.b2CircleShape; // Class for circle shapes
 let b2DebugDraw = Box2D.Dynamics.b2DebugDraw; // Class for debugging visualizations
-let b2MouseJointDef = Box2D.Dynamics.Joints.b2MouseJointDef; // Mouse joint definition class
-let b2EdgeShape = Box2D.Collision.Shapes.b2EdgeShape; // Class for edge shapes
 
 let connections = [];
 let world;
 const SCALE = 30;
-const WIDTH = 800;
+const WIDTH = 40000;
 const HEIGHT = 800;
 let size = 50;
 let fps = 80;
@@ -302,38 +297,11 @@ function update() {
   if (keyhit) {
     keyhit = false;
     if (key === "ArrowLeft" || key === "a") {
-      for (let b = world.GetBodyList(); b; b = b.GetNext()) {
-        for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
-          if (f.GetBody().GetUserData().id === "hero") {
-            f.GetBody().SetLinearVelocity(
-              new b2Vec2(-9, 0),
-              f.GetBody().GetWorldCenter()
-            );
-          }
-        }
-      }
+      goleft();
     } else if (key === "ArrowRight" || key === "d") {
-      for (let b = world.GetBodyList(); b; b = b.GetNext()) {
-        for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
-          if (f.GetBody().GetUserData().id === "hero") {
-            f.GetBody().SetLinearVelocity(
-              new b2Vec2(9, 0),
-              f.GetBody().GetWorldCenter()
-            );
-          }
-        }
-      }
+      goright();
     } else if (key === "ArrowUp" || key === "w") {
-      for (let b = world.GetBodyList(); b; b = b.GetNext()) {
-        for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
-          if (f.GetBody().GetUserData().id === "hero") {
-            f.GetBody().SetLinearVelocity(
-              new b2Vec2(0, -9),
-              f.GetBody().GetWorldCenter()
-            );
-          }
-        }
-      }
+      jump();
     }
   }
 
@@ -364,6 +332,42 @@ function stopleftright() {
   }
 }
 
+function goright() {
+  for (let b = world.GetBodyList(); b; b = b.GetNext()) {
+    for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
+      if (f.GetBody().GetUserData().id === "hero") {
+        f.GetBody().SetLinearVelocity(
+          new b2Vec2(9, f.GetBody().GetLinearVelocity().y)
+        );
+      }
+    }
+  }
+}
+
+function goleft() {
+  for (let b = world.GetBodyList(); b; b = b.GetNext()) {
+    for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
+      if (f.GetBody().GetUserData().id === "hero") {
+        f.GetBody().SetLinearVelocity(
+          new b2Vec2(-9, f.GetBody().GetLinearVelocity().y)
+        );
+      }
+    }
+  }
+}
+
+function jump() {
+  for (let b = world.GetBodyList(); b; b = b.GetNext()) {
+    for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
+      if (f.GetBody().GetUserData().id === "hero") {
+        f.GetBody().SetLinearVelocity(
+          new b2Vec2(f.GetBody().GetLinearVelocity().x, -9)
+        );
+      }
+    }
+  }
+}
+
 app.use(express.static("public"));
 app.use("/js", express.static(__dirname + "public/js"));
 app.use("/css", express.static(__dirname + "public/css"));
@@ -385,18 +389,16 @@ http.listen(3000, function () {
     });
 
     socket.on("keypress", (e) => {
-      console.log(e, socket.id);
       keyhit = true;
       key = e.key;
     });
 
     socket.on("keyrelease", (e) => {
-      console.log(e, socket.id);
+      keyhit = false;
       stopleftright();
     });
 
     socket.on("map", function (data) {
-      console.log(data);
       loadMap(data.map);
     });
   });

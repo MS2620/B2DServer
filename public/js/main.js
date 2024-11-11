@@ -20,7 +20,8 @@ let objs = [];
 let timestamps = [];
 let framerate = 60;
 let datastamps = [];
-
+let WIDTH = 40000;
+let HEIGHT = 800;
 let R2D = 180 / Math.PI;
 
 function init() {
@@ -99,15 +100,13 @@ function handleComplete() {
   let initialised = false;
   socket.on("objdata", function (data) {
     // console.log(data);
+    const groundimg = loader.getResult("ground"); // Get the ground image from the loader
+
     for (let i in data) {
       if (!initialised && data[i].id.startsWith("ground")) {
-        easelground = makeHorizontalTile(
-          loader.getResult("ground"),
-          data[i].objwidth,
-          data[i].objheight
-        );
-        easelground.x = data[i].x - 25;
-        easelground.y = data[i].y - 35;
+        easelground = makeHorizontalTile(loader.getResult("ground"), WIDTH, 64);
+        easelground.x = 0;
+        easelground.y = HEIGHT - groundimg.height;
 
         stage.addChild(easelground);
       } else if (!initialised && data[i].id === "hero") {
@@ -134,7 +133,7 @@ function handleComplete() {
         hero.snapToPixel = true; // Align the sprite to pixel grid
 
         hero.x = data[i].x;
-        hero.y = data[i].y - 25;
+        hero.y = data[i].y;
         stage.addChild(hero);
       } else if (!initialised && data[i].id.startsWith("plat")) {
         easelplatform = makeHorizontalTile(
