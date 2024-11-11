@@ -301,7 +301,7 @@ function update() {
 
   if (keyhit) {
     keyhit = false;
-    if (key === "ArrowLeft") {
+    if (key === "ArrowLeft" || key === "a") {
       for (let b = world.GetBodyList(); b; b = b.GetNext()) {
         for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
           if (f.GetBody().GetUserData().id === "hero") {
@@ -312,7 +312,7 @@ function update() {
           }
         }
       }
-    } else if (key === "ArrowRight") {
+    } else if (key === "ArrowRight" || key === "d") {
       for (let b = world.GetBodyList(); b; b = b.GetNext()) {
         for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
           if (f.GetBody().GetUserData().id === "hero") {
@@ -323,7 +323,7 @@ function update() {
           }
         }
       }
-    } else if (key === "ArrowUp") {
+    } else if (key === "ArrowUp" || key === "w") {
       for (let b = world.GetBodyList(); b; b = b.GetNext()) {
         for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
           if (f.GetBody().GetUserData().id === "hero") {
