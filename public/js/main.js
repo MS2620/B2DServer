@@ -80,6 +80,7 @@ function tick(e) {
   //   $("#score").html("Score: " + score); // Display the current score
   //   update(); // Call the update function to update game state
   stage.update(e); // Update the stage to reflect changes
+  followHero(); // Call the followHero function to adjust the camera
 }
 
 function handleComplete() {
@@ -98,6 +99,7 @@ function handleComplete() {
   createjs.Ticker.addEventListener("tick", tick);
 
   let initialised = false;
+  let playstand = false;
   socket.on("objdata", function (data) {
     // console.log(data);
     const groundimg = loader.getResult("ground"); // Get the ground image from the loader
@@ -138,32 +140,38 @@ function handleComplete() {
       } else if (!initialised && data[i].id.startsWith("plat")) {
         easelplatform = makeHorizontalTile(
           loader.getResult("plat1"),
-          data[i].objwidth,
+          data[i].objwidth * 1.45,
           data[i].objheight
         );
-        easelplatform.x = data[i].x;
-        easelplatform.y = data[i].y;
+        easelplatform.x = data[i].x - data[i].objwidth;
+        easelplatform.y = data[i].y - data[i].objheight;
         stage.addChild(easelplatform);
       } else if (!initialised && data[i].id.startsWith("pipe")) {
+        const pipeimg = loader.getResult("pipe"); // Load pipe image
         easelpipe = makeBitmap(
           loader.getResult("pipe"),
-          data[i].objwidth,
-          data[i].objheight,
+          pipeimg.width,
+          pipeimg.height,
           0
         );
         easelpipe.x = data[i].x;
-        easelpipe.y = data[i].y;
+        easelpipe.y = data[i].y + pipeimg.height / 15;
         stage.addChild(easelpipe);
       } else if (!initialised && data[i].id.startsWith("shroom")) {
-        easelshroom = makeBitmap(
-          loader.getResult("shroom"),
-          data[i].objwidth,
-          data[i].objheight,
-          0
+        const shroomsimg = loader.getResult("shroom"); // Load shroom image
+        const shroomsWidth = shroomsimg.width; // Get shroom width
+        const shroomsHeight = shroomsimg.height; // Get shroom height
+
+        // Create a visual representation of the shroom
+        const shroomsVisual = makeBitmap(
+          shroomsimg,
+          shroomsWidth / 2, // Scale down width
+          shroomsHeight / 2 // Scale down height
         );
-        easelshroom.x = data[i].x;
-        easelshroom.y = data[i].y;
-        stage.addChild(easelshroom);
+
+        shroomsVisual.x = data[i].x;
+        shroomsVisual.y = data[i].y + shroomsimg.height * 3.2;
+        stage.addChild(shroomsVisual);
       } else if (!initialised && data[i].id.startsWith("pole")) {
         easelpole = makeBitmap(
           loader.getResult("pole"),
@@ -178,6 +186,10 @@ function handleComplete() {
         console.log(data[i]);
         hero.x = data[i].x;
         hero.y = data[i].y;
+
+        if (playstand) {
+          hero.gotoAndPlay("stand");
+        }
       }
     }
 
@@ -192,11 +204,16 @@ function handleComplete() {
     initialised = true;
   });
 
-  // socket.on("hero", function (data) {
-  //   console.log(data);
-  //   hero.scaleX = data.scaleX;
-  //   hero.gotoAndPlay(data.animation);
-  // });
+  socket.on("hero", function (data) {
+    console.log(data);
+    if (data.animation === "stand") {
+      playstand = true;
+    } else {
+      playstand = false;
+      hero.scaleX = data.scaleX;
+      hero.gotoAndPlay(data.animation);
+    }
+  });
 }
 
 init();
@@ -233,4 +250,37 @@ function makeHorizontalTile(ldrimg, fillw, tilew) {
   theimage.tileW = tilew;
   theimage.snapToPixel = true;
   return theimage;
+}
+
+// VIEWPORT
+let initialised = false;
+let animationcomplete = false;
+
+// Function to adjust the camera to follow the hero (player)
+function followHero() {
+  // Get the player's current position in the world, scaled to canvas size
+  const playerPosX = hero.x; // Scale X position
+  const playerPosY = hero.y; // Scale Y position
+
+  // Get the dimensions of the viewport (canvas)
+  const viewportWidth = stage.canvas.width; // Width of the canvas
+  const viewportHeight = stage.canvas.height; // Height of the canvas
+
+  // Calculate camera offsets to keep the player centered in the viewport
+  const offsetX = viewportWidth / 2 - playerPosX; // Horizontal offset
+  const offsetY = viewportHeight / 2 - playerPosY; // Vertical offset
+
+  // Set boundaries for the camera to avoid moving beyond the world limits
+  const minOffsetX = -WIDTH + viewportWidth; // Minimum X offset (left boundary)
+  const maxOffsetX = 0; // Maximum X offset (right boundary)
+  const minOffsetY = -HEIGHT + viewportHeight; // Minimum Y offset (top boundary)
+  const maxOffsetY = 0; // Maximum Y offset (bottom boundary)
+
+  // Clamp the calculated camera position within the world limits
+  const finalOffsetX = Math.max(minOffsetX, Math.min(maxOffsetX, offsetX)); // Final X offset within bounds
+  const finalOffsetY = Math.max(minOffsetY, Math.min(maxOffsetY, offsetY)); // Final Y offset within bounds
+
+  // Apply the camera translation to the stage to keep the player centered
+  stage.x = finalOffsetX; // Set the X position of the stage
+  stage.y = finalOffsetY; // Set the Y position of the stage
 }

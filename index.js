@@ -190,11 +190,11 @@ function createShroom(row, col) {
 // Place the player character at the specified row and column
 function placePlayer(row, col) {
   // Define player dimensions
-  const playerWidth = 72; // Width of the player
+  const playerWidth = 52; // Width of the player
   const playerHeight = 140; // Height of the player
 
   // Create player with defined properties
-  createb2dObj(
+  player = createb2dObj(
     "hero", // Object ID
     col * CELL_WIDTH + CELL_WIDTH, // Centered X position
     row * CELL_HEIGHT + CELL_HEIGHT, // Centered Y position
@@ -206,7 +206,7 @@ function placePlayer(row, col) {
     false // Not a static object
   );
 
-  // player.GetBody().SetFixedRotation(true); // Prevent player rotation
+  player.GetBody().SetFixedRotation(true); // Prevent player rotation
 }
 
 let b2Vec2 = Box2D.Common.Math.b2Vec2; // Vector2 class for 2D coordinates
@@ -238,7 +238,7 @@ function createb2dObj(objid, x, y, dims, iscircle, isstatic) {
 
   let fixDef = new b2FixtureDef();
   fixDef.density = 1;
-  fixDef.friction = 0.2;
+  fixDef.friction = 0;
   fixDef.restitution = 0.1;
 
   let width, height;
@@ -366,7 +366,7 @@ function jump() {
         f.GetBody().SetLinearVelocity(
           new b2Vec2(f.GetBody().GetLinearVelocity().x, -9)
         );
-        io.sockets.emit("hero", { animation: "jump" });
+        io.sockets.emit("hero", { scaleX: 1, animation: "jump" });
       }
     }
   }
