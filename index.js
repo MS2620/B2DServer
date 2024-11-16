@@ -327,6 +327,7 @@ function stopleftright() {
         f.GetBody().SetLinearVelocity(
           new b2Vec2(0, f.GetBody().GetLinearVelocity().y)
         );
+        io.sockets.emit("hero", { animation: "stand" });
       }
     }
   }
@@ -339,6 +340,7 @@ function goright() {
         f.GetBody().SetLinearVelocity(
           new b2Vec2(9, f.GetBody().GetLinearVelocity().y)
         );
+        io.sockets.emit("hero", { scaleX: 1, animation: "run" });
       }
     }
   }
@@ -351,6 +353,7 @@ function goleft() {
         f.GetBody().SetLinearVelocity(
           new b2Vec2(-9, f.GetBody().GetLinearVelocity().y)
         );
+        io.sockets.emit("hero", { scaleX: -1, animation: "run" });
       }
     }
   }
@@ -363,6 +366,7 @@ function jump() {
         f.GetBody().SetLinearVelocity(
           new b2Vec2(f.GetBody().GetLinearVelocity().x, -9)
         );
+        io.sockets.emit("hero", { animation: "jump" });
       }
     }
   }

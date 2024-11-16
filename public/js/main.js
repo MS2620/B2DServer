@@ -192,11 +192,11 @@ function handleComplete() {
     initialised = true;
   });
 
-  socket.on("hero", function (data) {
-    console.log(data);
-    hero.scaleX = data.scaleX;
-    hero.gotoAndPlay(data.animation);
-  });
+  // socket.on("hero", function (data) {
+  //   console.log(data);
+  //   hero.scaleX = data.scaleX;
+  //   hero.gotoAndPlay(data.animation);
+  // });
 }
 
 init();
