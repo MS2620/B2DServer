@@ -80,7 +80,7 @@ function tick(e) {
   //   $("#score").html("Score: " + score); // Display the current score
   //   update(); // Call the update function to update game state
   stage.update(e); // Update the stage to reflect changes
-  followHero(); // Call the followHero function to adjust the camera
+  // followHero(); // Call the followHero function to adjust the camera
 }
 
 function handleComplete() {
@@ -101,7 +101,6 @@ function handleComplete() {
   let initialised = false;
   let playstand = false;
   socket.on("objdata", function (data) {
-    // console.log(data);
     const groundimg = loader.getResult("ground"); // Get the ground image from the loader
 
     for (let i in data) {
@@ -111,7 +110,7 @@ function handleComplete() {
         easelground.y = HEIGHT - groundimg.height;
 
         stage.addChild(easelground);
-      } else if (!initialised && data[i].id === "hero") {
+      } else if (!initialised && data[i].id === `${socket.id}`) {
         // Create the hero sprite
         const spritesheet = new createjs.SpriteSheet({
           framerate: 60, // Set framerate for animations
@@ -182,8 +181,8 @@ function handleComplete() {
         easelpole.x = data[i].x;
         easelpole.y = data[i].y;
         stage.addChild(easelpole);
-      } else if (initialised && data[i].id === "hero") {
-        console.log(data[i]);
+      } else if (initialised && data[i].id === "updatePlayers") {
+        // console.log(data[i]);
         hero.x = data[i].x;
         hero.y = data[i].y;
 
@@ -257,30 +256,30 @@ let initialised = false;
 let animationcomplete = false;
 
 // Function to adjust the camera to follow the hero (player)
-function followHero() {
-  // Get the player's current position in the world, scaled to canvas size
-  const playerPosX = hero.x; // Scale X position
-  const playerPosY = hero.y; // Scale Y position
+// function followHero() {
+//   // Get the player's current position in the world, scaled to canvas size
+//   const playerPosX = hero.x; // Scale X position
+//   const playerPosY = hero.y; // Scale Y position
 
-  // Get the dimensions of the viewport (canvas)
-  const viewportWidth = stage.canvas.width; // Width of the canvas
-  const viewportHeight = stage.canvas.height; // Height of the canvas
+//   // Get the dimensions of the viewport (canvas)
+//   const viewportWidth = stage.canvas.width; // Width of the canvas
+//   const viewportHeight = stage.canvas.height; // Height of the canvas
 
-  // Calculate camera offsets to keep the player centered in the viewport
-  const offsetX = viewportWidth / 2 - playerPosX; // Horizontal offset
-  const offsetY = viewportHeight / 2 - playerPosY; // Vertical offset
+//   // Calculate camera offsets to keep the player centered in the viewport
+//   const offsetX = viewportWidth / 2 - playerPosX; // Horizontal offset
+//   const offsetY = viewportHeight / 2 - playerPosY; // Vertical offset
 
-  // Set boundaries for the camera to avoid moving beyond the world limits
-  const minOffsetX = -WIDTH + viewportWidth; // Minimum X offset (left boundary)
-  const maxOffsetX = 0; // Maximum X offset (right boundary)
-  const minOffsetY = -HEIGHT + viewportHeight; // Minimum Y offset (top boundary)
-  const maxOffsetY = 0; // Maximum Y offset (bottom boundary)
+//   // Set boundaries for the camera to avoid moving beyond the world limits
+//   const minOffsetX = -WIDTH + viewportWidth; // Minimum X offset (left boundary)
+//   const maxOffsetX = 0; // Maximum X offset (right boundary)
+//   const minOffsetY = -HEIGHT + viewportHeight; // Minimum Y offset (top boundary)
+//   const maxOffsetY = 0; // Maximum Y offset (bottom boundary)
 
-  // Clamp the calculated camera position within the world limits
-  const finalOffsetX = Math.max(minOffsetX, Math.min(maxOffsetX, offsetX)); // Final X offset within bounds
-  const finalOffsetY = Math.max(minOffsetY, Math.min(maxOffsetY, offsetY)); // Final Y offset within bounds
+//   // Clamp the calculated camera position within the world limits
+//   const finalOffsetX = Math.max(minOffsetX, Math.min(maxOffsetX, offsetX)); // Final X offset within bounds
+//   const finalOffsetY = Math.max(minOffsetY, Math.min(maxOffsetY, offsetY)); // Final Y offset within bounds
 
-  // Apply the camera translation to the stage to keep the player centered
-  stage.x = finalOffsetX; // Set the X position of the stage
-  stage.y = finalOffsetY; // Set the Y position of the stage
-}
+//   // Apply the camera translation to the stage to keep the player centered
+//   stage.x = finalOffsetX; // Set the X position of the stage
+//   stage.y = finalOffsetY; // Set the Y position of the stage
+// }

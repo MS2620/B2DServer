@@ -29,6 +29,11 @@ let levelStartTime; // Time when the level started
 let timeSpent = 0; // Total time spent in the level
 let levelTimer; // Timer reference for updating the time spent
 
+const players = {}; // Store all connected players
+const playerIds = []; // Store all connected player IDs
+let INITIAL_PLAYER_X; // Initial X position for the player
+let INITIAL_PLAYER_Y; // Initial Y position for the player
+
 // Function to load a map from the specified file path
 function loadMap(mapFilePath) {
   fetch("http://localhost:3000" + mapFilePath) // Fetch the map file from the server
@@ -189,24 +194,27 @@ function createShroom(row, col) {
 
 // Place the player character at the specified row and column
 function placePlayer(row, col) {
-  // Define player dimensions
-  const playerWidth = 52; // Width of the player
-  const playerHeight = 140; // Height of the player
+  const playerWidth = 52;
+  const playerHeight = 140;
 
-  // Create player with defined properties
-  player = createb2dObj(
-    "hero", // Object ID
-    col * CELL_WIDTH + CELL_WIDTH, // Centered X position
-    row * CELL_HEIGHT + CELL_HEIGHT, // Centered Y position
-    {
-      width: playerWidth, // Width of the player
-      height: playerHeight,
-    }, // Height of the player
-    false, // Not a circle shape
-    false // Not a static object
-  );
+  const x = col * CELL_WIDTH + CELL_WIDTH / 2;
+  const y = row * CELL_HEIGHT + CELL_HEIGHT / 2;
 
-  player.GetBody().SetFixedRotation(true); // Prevent player rotation
+  INITIAL_PLAYER_X = x;
+  INITIAL_PLAYER_Y = y;
+
+  // player = createb2dObj(
+  //   playerIds[0], // Use socket ID or unique identifier
+  //   x,
+  //   y,
+  //   { width: playerWidth, height: playerHeight },
+  //   false,
+  //   false
+  // );
+
+  // player.GetBody().SetFixedRotation(true);
+
+  // players["hero"] = player;
 }
 
 let b2Vec2 = Box2D.Common.Math.b2Vec2; // Vector2 class for 2D coordinates
@@ -216,7 +224,6 @@ let b2FixtureDef = Box2D.Dynamics.b2FixtureDef; // Definition class for fixtures
 let b2World = Box2D.Dynamics.b2World; // World class for managing the simulation
 let b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape; // Class for polygon shapes
 let b2CircleShape = Box2D.Collision.Shapes.b2CircleShape; // Class for circle shapes
-let b2DebugDraw = Box2D.Dynamics.b2DebugDraw; // Class for debugging visualizations
 
 let connections = [];
 let world;
@@ -294,18 +301,19 @@ function drawDOMObj() {
 function update() {
   world.Step(1 / fps, 10, 10);
 
-  if (keyhit) {
-    keyhit = false;
-    if (key === "ArrowLeft" || key === "a") {
-      goleft();
-    } else if (key === "ArrowRight" || key === "d") {
-      goright();
-    } else if (key === "ArrowUp" || key === "w") {
-      jump();
-    }
-  }
+  // if (keyhit) {
+  //   keyhit = false;
+  //   if (key === "ArrowLeft" || key === "a") {
+  //     goleft();
+  //   } else if (key === "ArrowRight" || key === "d") {
+  //     goright();
+  //   } else if (key === "ArrowUp" || key === "w") {
+  //     jump();
+  //   }
+  // }
 
   io.sockets.emit("objdata", drawDOMObj());
+  io.emit("updatePlayers", drawPlayers());
   world.ClearForces();
 }
 
@@ -320,56 +328,97 @@ function init() {
 }
 
 // Keyboard input
-function stopleftright() {
-  for (let b = world.GetBodyList(); b; b = b.GetNext()) {
-    for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
-      if (f.GetBody().GetUserData().id === "hero") {
-        f.GetBody().SetLinearVelocity(
-          new b2Vec2(0, f.GetBody().GetLinearVelocity().y)
-        );
-        io.sockets.emit("hero", { animation: "stand" });
+// function stopleftright() {
+//   for (let b = world.GetBodyList(); b; b = b.GetNext()) {
+//     for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
+//       if (f.GetBody().GetUserData().id === "hero") {
+//         f.GetBody().SetLinearVelocity(
+//           new b2Vec2(0, f.GetBody().GetLinearVelocity().y)
+//         );
+//         io.sockets.emit("hero", { animation: "stand" });
+//       }
+//     }
+//   }
+// }
+
+// function goright() {
+//   for (let b = world.GetBodyList(); b; b = b.GetNext()) {
+//     for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
+//       if (f.GetBody().GetUserData().id === "hero") {
+//         f.GetBody().SetLinearVelocity(
+//           new b2Vec2(9, f.GetBody().GetLinearVelocity().y)
+//         );
+//         io.sockets.emit("hero", { scaleX: 1, animation: "run" });
+//       }
+//     }
+//   }
+// }
+
+// function goleft() {
+//   for (let b = world.GetBodyList(); b; b = b.GetNext()) {
+//     for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
+//       if (f.GetBody().GetUserData().id === "hero") {
+//         f.GetBody().SetLinearVelocity(
+//           new b2Vec2(-9, f.GetBody().GetLinearVelocity().y)
+//         );
+//         io.sockets.emit("hero", { scaleX: -1, animation: "run" });
+//       }
+//     }
+//   }
+// }
+
+// function jump() {
+//   for (let b = world.GetBodyList(); b; b = b.GetNext()) {
+//     for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
+//       if (f.GetBody().GetUserData().id === "hero") {
+//         f.GetBody().SetLinearVelocity(
+//           new b2Vec2(f.GetBody().GetLinearVelocity().x, -9)
+//         );
+//         io.sockets.emit("hero", { scaleX: 1, animation: "jump" });
+//       }
+//     }
+//   }
+// }
+
+// Function to process player input
+function handlePlayerInput(playerId, key, action) {
+  if (players[playerId]) {
+    const player = players[playerId].GetBody();
+
+    console.log(`Player ${playerId} ${action}ed key: ${key}`);
+
+    if (action === "press") {
+      if (key === "ArrowLeft" || key === "a") {
+        player.SetLinearVelocity(new b2Vec2(-9, player.GetLinearVelocity().y));
+      } else if (key === "ArrowRight" || key === "d") {
+        player.SetLinearVelocity(new b2Vec2(9, player.GetLinearVelocity().y));
+      } else if (key === "ArrowUp" || key === "w") {
+        player.SetLinearVelocity(new b2Vec2(player.GetLinearVelocity().x, -9));
+      }
+    } else if (action === "release") {
+      if (["ArrowLeft", "ArrowRight", "a", "d"].includes(key)) {
+        player.SetLinearVelocity(new b2Vec2(0, player.GetLinearVelocity().y));
       }
     }
+    io.emit("updatePlayers", drawPlayers());
+  } else {
+    console.log(`Player ${playerId} not found`);
   }
 }
 
-function goright() {
-  for (let b = world.GetBodyList(); b; b = b.GetNext()) {
-    for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
-      if (f.GetBody().GetUserData().id === "hero") {
-        f.GetBody().SetLinearVelocity(
-          new b2Vec2(9, f.GetBody().GetLinearVelocity().y)
-        );
-        io.sockets.emit("hero", { scaleX: 1, animation: "run" });
-      }
-    }
+// // Update all player positions
+function drawPlayers() {
+  const playerStates = [];
+  for (const playerID in players) {
+    const body = players[playerID].GetBody();
+    const position = body.GetPosition();
+    playerStates.push({
+      id: playerID,
+      x: position.x, // X position in the Box2D world
+      y: position.y, // Y position in the Box2D world
+    });
   }
-}
-
-function goleft() {
-  for (let b = world.GetBodyList(); b; b = b.GetNext()) {
-    for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
-      if (f.GetBody().GetUserData().id === "hero") {
-        f.GetBody().SetLinearVelocity(
-          new b2Vec2(-9, f.GetBody().GetLinearVelocity().y)
-        );
-        io.sockets.emit("hero", { scaleX: -1, animation: "run" });
-      }
-    }
-  }
-}
-
-function jump() {
-  for (let b = world.GetBodyList(); b; b = b.GetNext()) {
-    for (let f = b.GetFixtureList(); f; f = f.GetNext()) {
-      if (f.GetBody().GetUserData().id === "hero") {
-        f.GetBody().SetLinearVelocity(
-          new b2Vec2(f.GetBody().GetLinearVelocity().x, -9)
-        );
-        io.sockets.emit("hero", { scaleX: 1, animation: "jump" });
-      }
-    }
-  }
+  return playerStates;
 }
 
 app.use(express.static("public"));
@@ -379,31 +428,83 @@ app.use("/assets", express.static(__dirname + "public/assets"));
 
 http.listen(3000, function () {
   console.log("Server is running on port 3000");
+  // io.on("connection", function (socket) {
+  //   connections.push(socket);
+  //   console.log("Connected: %s sockets connected", connections.length);
+
+  //   socket.on("disconnect", function (data) {
+  //     connections.splice(connections.indexOf(socket), 1);
+  //     console.log("Disconnected: %s sockets connected", connections.length);
+  //   });
+
+  //   socket.on("send message", function (data) {
+  //     io.sockets.emit("new message", { msg: data });
+  //   });
+
+  //   socket.on("keypress", (e) => {
+  //     keyhit = true;
+  //     key = e.key;
+  //   });
+
+  //   socket.on("keyrelease", (e) => {
+  //     keyhit = false;
+  //     stopleftright();
+  //   });
+
+  //   socket.on("map", function (data) {
+  //     loadMap(data.map);
+  //   });
+  // });
   io.on("connection", function (socket) {
+    console.log(`Player connected: ${socket.id}`);
+    playerIds.push(socket.id);
     connections.push(socket);
-    console.log("Connected: %s sockets connected", connections.length);
 
-    socket.on("disconnect", function (data) {
-      connections.splice(connections.indexOf(socket), 1);
-      console.log("Disconnected: %s sockets connected", connections.length);
-    });
+    // Create a new player and add it to the players list
+    const player = createb2dObj(
+      socket.id, // Use socket ID as the unique player identifier
+      INITIAL_PLAYER_X, // Set a default or map-based initial X position
+      INITIAL_PLAYER_Y, // Set a default or map-based initial Y position
+      { width: 52, height: 140 }, // Player dimensions
+      false, // Not a circle
+      false // Dynamic body
+    );
 
-    socket.on("send message", function (data) {
-      io.sockets.emit("new message", { msg: data });
-    });
+    player.GetBody().SetFixedRotation(true); // Prevent rotation for player bodies
+    players[socket.id] = player; // Add to the players object
 
+    // Notify all clients about the new player
+    io.emit("updatePlayers", drawPlayers());
+
+    // Handle keypress events
     socket.on("keypress", (e) => {
-      keyhit = true;
-      key = e.key;
+      handlePlayerInput(socket.id, e.key, "press");
     });
 
+    // Handle keyrelease events
     socket.on("keyrelease", (e) => {
-      keyhit = false;
-      stopleftright();
+      handlePlayerInput(socket.id, e.key, "release");
     });
 
     socket.on("map", function (data) {
       loadMap(data.map);
+    });
+
+    // Handle player disconnection
+    socket.on("disconnect", () => {
+      console.log(`Player disconnected: ${socket.id}`);
+
+      // Safely remove the player and their body from the game
+      if (players[socket.id]) {
+        if (players[(socket, id)]) {
+          const body = players[socket.id].GetBody();
+          world.DestroyBody(body); // Remove the player's body from Box2D world
+          delete players[socket.id]; // Remove the player from the players object
+        }
+      }
+
+      // Notify all clients about the updated player list
+      io.emit("updatePlayers", drawPlayers());
     });
   });
 });
