@@ -36,7 +36,7 @@ let INITIAL_PLAYER_Y; // Initial Y position for the player
 
 // Function to load a map from the specified file path
 function loadMap(mapFilePath) {
-  fetch("http://localhost:3000" + mapFilePath) // Fetch the map file from the server
+  fetch("http://localhost:3001" + mapFilePath) // Fetch the map file from the server
     .then((response) => response.text()) // Convert the response to text
     .then((data) => {
       processMap(data); // Process the loaded map data
@@ -426,8 +426,8 @@ app.use("/js", express.static(__dirname + "public/js"));
 app.use("/css", express.static(__dirname + "public/css"));
 app.use("/assets", express.static(__dirname + "public/assets"));
 
-http.listen(3000, function () {
-  console.log("Server is running on port 3000");
+http.listen(3001, function () {
+  console.log("Server is running on port 3001");
 
   io.on("connection", function (socket) {
     console.log(`Player connected: ${socket.id}`);
