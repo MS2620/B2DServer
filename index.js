@@ -428,33 +428,7 @@ app.use("/assets", express.static(__dirname + "public/assets"));
 
 http.listen(3000, function () {
   console.log("Server is running on port 3000");
-  // io.on("connection", function (socket) {
-  //   connections.push(socket);
-  //   console.log("Connected: %s sockets connected", connections.length);
 
-  //   socket.on("disconnect", function (data) {
-  //     connections.splice(connections.indexOf(socket), 1);
-  //     console.log("Disconnected: %s sockets connected", connections.length);
-  //   });
-
-  //   socket.on("send message", function (data) {
-  //     io.sockets.emit("new message", { msg: data });
-  //   });
-
-  //   socket.on("keypress", (e) => {
-  //     keyhit = true;
-  //     key = e.key;
-  //   });
-
-  //   socket.on("keyrelease", (e) => {
-  //     keyhit = false;
-  //     stopleftright();
-  //   });
-
-  //   socket.on("map", function (data) {
-  //     loadMap(data.map);
-  //   });
-  // });
   io.on("connection", function (socket) {
     console.log(`Player connected: ${socket.id}`);
     playerIds.push(socket.id);
@@ -496,11 +470,9 @@ http.listen(3000, function () {
 
       // Safely remove the player and their body from the game
       if (players[socket.id]) {
-        if (players[(socket, id)]) {
-          const body = players[socket.id].GetBody();
-          world.DestroyBody(body); // Remove the player's body from Box2D world
-          delete players[socket.id]; // Remove the player from the players object
-        }
+        const body = players[socket.id].GetBody();
+        world.DestroyBody(body); // Remove the player's body from Box2D world
+        delete players[socket.id]; // Remove the player from the players object
       }
 
       // Notify all clients about the updated player list
